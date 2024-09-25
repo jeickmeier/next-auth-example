@@ -9,7 +9,7 @@ const config = {
     GitHub,
   ],
   basePath: "/auth",
-  debug: process.env.NODE_ENV !== "production" ? true : false,
+  //debug: process.env.NODE_ENV !== "production" ? true : false,
 } satisfies NextAuthConfig
 
 export const { handlers, auth, signIn, signOut } = NextAuth(config)
