@@ -4,7 +4,11 @@ import "next-auth/jwt"
 import GitHub from "next-auth/providers/github"
 import type { NextAuthConfig } from "next-auth"
 
+import { DrizzleAdapter } from "@auth/drizzle-adapter"
+import { db } from "./db/schema"
+
 const config = {
+  adapter: DrizzleAdapter(db),
   providers: [
     GitHub,
   ],
