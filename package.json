@@ -1,5 +1,5 @@
 {
-  "description": "An example project for NextAuth.js with Next.js",
+  "description": "Dashboard Boilerplate with Multi-Role Authentications",
   "scripts": {
     "dev": "next",
     "build": "next build",
