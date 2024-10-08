@@ -5,6 +5,8 @@ import {
     text,
     primaryKey,
     integer,
+    serial,
+    varchar
   } from "drizzle-orm/pg-core"
   import type { AdapterAccountType } from "next-auth/adapters"
   
@@ -16,8 +18,27 @@ import {
     email: text("email").unique(),
     emailVerified: timestamp("emailVerified", { mode: "date" }),
     image: text("image"),
-    
   })
+
+  export const roles = pgTable('roles', {
+    id: integer('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+  });
+
+  export const userRoles = pgTable(
+    'user_roles',
+    {
+      userId: text('user_id')
+        .notNull()
+        .references(() => users.id),
+      roleId: serial('role_id')
+        .notNull()
+        .references(() => roles.id),
+    },
+    (table) => ({
+      pk: primaryKey(table.userId, table.roleId),
+    })
+  );
    
   export const accounts = pgTable(
     "account",

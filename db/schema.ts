@@ -18,4 +18,6 @@ export const {
         sessions,
         verificationTokens,
         authenticators,
+        roles,
+        userRoles,
         } = models
