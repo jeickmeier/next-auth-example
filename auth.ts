@@ -11,33 +11,42 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter"
 
 import { users, userRoles, accounts, roles } from "./db/models/auth" 
 
-export function CustomDrizzleAdapter(db:any) {
+export function CustomDrizzleAdapter(db: any) {
   const adapter = DrizzleAdapter(db);
 
   return {
     ...adapter,
 
-    // Override methods if custom behavior is needed
-    async createUser(user:any) {
+    async createUser(user: any) {
       // Start a transaction
-      const result = await db.transaction(async (tx:any) => {
+      const result = await db.transaction(async (tx: any) => {
         // Insert into 'users' table
         const newUser = await tx.insert(users).values({
           ...user,
         }).returning();
-    
+
         // Insert into 'user_roles' table using the new user's ID
         await tx.insert(userRoles).values({
           userId: newUser[0].id,
-          roleId: 1
+          roleId: 1,
         });
-    
-        // Return the new user object
-        return {
-          ...newUser[0]
-        }
+
+        // **Fetch user roles from the 'user_roles' table**
+        const userRolesData = await tx
+          .select()
+          .from(userRoles)
+          .where(eq(userRoles.userId, newUser[0].id));
+
+        // **Combine user information and roles**
+        const userWithRoles = {
+          ...newUser[0],
+          roles: userRolesData.map((role: any) => role.roleId),
+        };
+
+        // **Return the new user object with roles**
+        return userWithRoles;
       });
-    
+
       return result;
     },
 
@@ -120,8 +129,6 @@ export function CustomDrizzleAdapter(db:any) {
 
     },
     
-    
-
 
   }
 }
@@ -129,10 +136,32 @@ export function CustomDrizzleAdapter(db:any) {
 const config = {
   adapter: CustomDrizzleAdapter(db),
   providers: [
-    GitHub,
+    GitHub({
+
+    }),
   ],
   basePath: "/auth",
   debug: false, //process.env.NODE_ENV !== "production" ? true : false,
+
+  callbacks: {
+    async jwt({ token, user }) {
+      // Initial sign in
+      if (user) {
+        token.roles = user.roles;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.roles = token.roles || [];
+      }
+      return session;
+    },
+  },
+
+  session: {
+    strategy: "jwt"
+  }
 
 } as NextAuthConfig;
 
